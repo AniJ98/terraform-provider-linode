@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/linode/linodego"
 	"github.com/linode/terraform-provider-linode/v2/linode/helper"
@@ -105,30 +106,30 @@ func (d *DataSource) Read(
 			return
 		}
 
-		ipList := make([]DataSourceModel, len(ips))
+		ipList := make([]attr.Value, len(ips))
 		for i, ip := range ips {
-			var ipModel DataSourceModel
-			ipModel.parseIP(&ip)
-			ipList[i] = ipModel
+			ipObj := map[string]attr.Value{
+				"address":     types.StringValue(ip.Address),
+				"region":      types.StringValue(ip.Region),
+				"gateway":     types.StringValue(ip.Gateway),
+				"subnet_mask": types.StringValue(ip.SubnetMask),
+				"prefix":      types.Int64Value(int64(ip.Prefix)),
+				"type":        types.StringValue(string(ip.Type)),
+				"public":      types.BoolValue(ip.Public),
+				"rdns":        types.StringValue(ip.RDNS),
+				"linode_id":   types.Int64Value(int64(ip.LinodeID)),
+				"reserved":    types.BoolValue(ip.Reserved),
+			}
+			ipList[i] = types.ObjectValueMust(updatedIPObjectType.AttrTypes, ipObj)
 		}
 
-		data.IPAddresses, _ = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: DataSourceModel{}.AttrTypes()}, ipList)
+		var diags diag.Diagnostics
+		data.IPAddresses, diags = types.ListValue(updatedIPObjectType, ipList)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (m DataSourceModel) AttrTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"address":     types.StringType,
-		"region":      types.StringType,
-		"gateway":     types.StringType,
-		"subnet_mask": types.StringType,
-		"prefix":      types.Int64Type,
-		"type":        types.StringType,
-		"public":      types.BoolType,
-		"rdns":        types.StringType,
-		"linode_id":   types.Int64Type,
-		"reserved":    types.BoolType,
-	}
 }

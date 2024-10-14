@@ -15,3 +15,7 @@ func DataBasic(t *testing.T, label, region string) string {
 	return acceptance.ExecuteTemplate(t,
 		"networking_ip_data_basic", TemplateData{Label: label, Region: region})
 }
+
+func DataList(t *testing.T) string {
+	return acceptance.ExecuteTemplate(t, "networking_ip_data_list", nil)
+}

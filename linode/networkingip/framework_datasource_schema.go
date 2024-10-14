@@ -1,14 +1,32 @@
 package networkingip
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+var updatedIPObjectType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"address":     types.StringType,
+		"region":      types.StringType,
+		"gateway":     types.StringType,
+		"subnet_mask": types.StringType,
+		"prefix":      types.Int64Type,
+		"type":        types.StringType,
+		"public":      types.BoolType,
+		"rdns":        types.StringType,
+		"linode_id":   types.Int64Type,
+		"reserved":    types.BoolType,
+	},
+}
 
 var frameworkDatasourceSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"address": schema.StringAttribute{
 			Description: "The IP address.",
-			Required:    true,
+			// Required:    true,
+			Optional: true,
 		},
 		"gateway": schema.StringAttribute{
 			Description: "The default gateway for this address.",
@@ -47,22 +65,14 @@ var frameworkDatasourceSchema = schema.Schema{
 			Description: "A unique identifier for this datasource.",
 			Computed:    true,
 		},
-		"ip_addresses": schema.ListNestedAttribute{
-			Computed: true,
-			NestedObject: schema.NestedAttributeObject{
-				Attributes: map[string]schema.Attribute{
-					"address":     schema.StringAttribute{Computed: true},
-					"region":      schema.StringAttribute{Computed: true},
-					"gateway":     schema.StringAttribute{Computed: true},
-					"subnet_mask": schema.StringAttribute{Computed: true},
-					"prefix":      schema.Int64Attribute{Computed: true},
-					"type":        schema.StringAttribute{Computed: true},
-					"public":      schema.BoolAttribute{Computed: true},
-					"rdns":        schema.StringAttribute{Computed: true},
-					"linode_id":   schema.Int64Attribute{Computed: true},
-					"reserved":    schema.BoolAttribute{Computed: true},
-				},
-			},
+		"reserved": schema.BoolAttribute{
+			Computed:    true,
+			Description: "Whether this IP is reserved or not.",
+		},
+		"ip_addresses": schema.ListAttribute{
+			Description: "A list of all IPs.",
+			Computed:    true,
+			ElementType: updatedIPObjectType,
 		},
 	},
 }
