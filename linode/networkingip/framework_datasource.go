@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -93,23 +92,17 @@ func (d *DataSource) Read(
 
 		data.parseIP(ip)
 	} else {
-		// List all IP addresses
-		// filter := ""
-		// opts := &linodego.ListOptions{Filter: filter}
-		// ips, err := d.Meta.Client.ListIPAddresses(ctx, opts)
-		// if err != nil {
-		// 	resp.Diagnostics.AddError(
-		// 		"Unable to list IP Addresses",
-		// 		err.Error(),
-		// 	)
-		// 	return
-		// }
+		// List all IP addresses with filter on reservation status
 
 		filter, err := buildFilter(data)
 		if err != nil {
 			resp.Diagnostics.AddError("Unable to build filter", err.Error())
 			return
 		}
+
+		tflog.Debug(ctx, "Generated filter", map[string]interface{}{
+			"filter": filter,
+		})
 
 		opts := &linodego.ListOptions{Filter: filter}
 		ips, err := d.Meta.Client.ListIPAddresses(ctx, opts)
@@ -149,10 +142,6 @@ func (d *DataSource) Read(
 func buildFilter(data DataSourceModel) (string, error) {
 	filters := make(map[string]string)
 
-	// if !data.FilterRegion.IsNull() {
-	// 	filters["region"] = data.FilterRegion.ValueString()
-	// }
-
 	if !data.FilterReserved.IsNull() {
 		filters["reserved"] = fmt.Sprintf("%t", data.FilterReserved.ValueBool())
 	}
@@ -161,10 +150,10 @@ func buildFilter(data DataSourceModel) (string, error) {
 		return "", nil
 	}
 
-	var filterStrings []string
-	for k, v := range filters {
-		filterStrings = append(filterStrings, fmt.Sprintf("%s:%s", k, v))
+	jsonFilter, err := json.Marshal(filters)
+	if err != nil {
+		return "", fmt.Errorf("error creating filter: %v", err)
 	}
 
-	return strings.Join(filterStrings, ","), nil
+	return string(jsonFilter), nil
 }
