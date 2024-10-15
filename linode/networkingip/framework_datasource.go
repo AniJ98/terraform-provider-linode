@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -59,6 +60,8 @@ type DataSourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	Reserved    types.Bool   `tfsdk:"reserved"`
 	IPAddresses types.List   `tfsdk:"ip_addresses"`
+	// FilterRegion   types.String `tfsdk:"filter_region"`
+	FilterReserved types.Bool `tfsdk:"filter_reserved"`
 }
 
 func (d *DataSource) Read(
@@ -91,18 +94,27 @@ func (d *DataSource) Read(
 		data.parseIP(ip)
 	} else {
 		// List all IP addresses
-		filter := ""
-		if !data.Region.IsNull() {
-			filter = fmt.Sprintf("{\"region\":\"%s\"}", data.Region.ValueString())
+		// filter := ""
+		// opts := &linodego.ListOptions{Filter: filter}
+		// ips, err := d.Meta.Client.ListIPAddresses(ctx, opts)
+		// if err != nil {
+		// 	resp.Diagnostics.AddError(
+		// 		"Unable to list IP Addresses",
+		// 		err.Error(),
+		// 	)
+		// 	return
+		// }
+
+		filter, err := buildFilter(data)
+		if err != nil {
+			resp.Diagnostics.AddError("Unable to build filter", err.Error())
+			return
 		}
 
 		opts := &linodego.ListOptions{Filter: filter}
 		ips, err := d.Meta.Client.ListIPAddresses(ctx, opts)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to list IP Addresses",
-				err.Error(),
-			)
+			resp.Diagnostics.AddError("Unable to list IP Addresses", err.Error())
 			return
 		}
 
@@ -132,4 +144,27 @@ func (d *DataSource) Read(
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func buildFilter(data DataSourceModel) (string, error) {
+	filters := make(map[string]string)
+
+	// if !data.FilterRegion.IsNull() {
+	// 	filters["region"] = data.FilterRegion.ValueString()
+	// }
+
+	if !data.FilterReserved.IsNull() {
+		filters["reserved"] = fmt.Sprintf("%t", data.FilterReserved.ValueBool())
+	}
+
+	if len(filters) == 0 {
+		return "", nil
+	}
+
+	var filterStrings []string
+	for k, v := range filters {
+		filterStrings = append(filterStrings, fmt.Sprintf("%s:%s", k, v))
+	}
+
+	return strings.Join(filterStrings, ","), nil
 }

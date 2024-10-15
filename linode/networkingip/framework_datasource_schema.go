@@ -74,5 +74,13 @@ var frameworkDatasourceSchema = schema.Schema{
 			Computed:    true,
 			ElementType: updatedIPObjectType,
 		},
+		"filter_region": schema.StringAttribute{
+			Description: "Filter IPs by region.",
+			Optional:    true,
+		},
+		"filter_reserved": schema.BoolAttribute{
+			Description: "Filter IPs by reserved status.",
+			Optional:    true,
+		},
 	},
 }
