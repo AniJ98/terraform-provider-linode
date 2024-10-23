@@ -225,6 +225,7 @@ func (p *FrameworkProvider) Resources(ctx context.Context) []func() resource.Res
 		firewall.NewResource,
 		placementgroup.NewResource,
 		placementgroupassignment.NewResource,
+		networkingip.NewResource,
 	}
 }
 
