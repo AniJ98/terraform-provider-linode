@@ -1,4 +1,4 @@
-package instancereservedip
+package instancereservedipassignment
 
 import (
 	"context"
@@ -16,7 +16,7 @@ func NewResource() resource.Resource {
 	return &Resource{
 		BaseResource: helper.NewBaseResource(
 			helper.BaseResourceConfig{
-				Name:   "linode_instance_reserved_ip",
+				Name:   "linode_reserved_ip_assign",
 				IDType: types.StringType,
 				Schema: &frameworkResourceSchema,
 			},
@@ -33,7 +33,7 @@ func (r *Resource) Create(
 	req resource.CreateRequest,
 	resp *resource.CreateResponse,
 ) {
-	tflog.Debug(ctx, "Create linode_instance_ip")
+	tflog.Debug(ctx, "Create linode_reserved_ip_assign")
 	var plan InstanceIPModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
