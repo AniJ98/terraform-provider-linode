@@ -228,7 +228,6 @@ func (p *FrameworkProvider) Resources(ctx context.Context) []func() resource.Res
 		placementgroupassignment.NewResource,
 		networkreservedip.NewResource,
 		instancereservedipassignment.NewResource,
-		networkreservedip.NewResource,
 		rdns.NewResource,
 		sshkey.NewResource,
 		stackscript.NewResource,
