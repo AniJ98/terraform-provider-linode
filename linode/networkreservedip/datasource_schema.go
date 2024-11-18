@@ -1,42 +1,13 @@
 package networkreservedip
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/linode/terraform-provider-linode/v2/linode/instancenetworking"
 )
 
-type ReservedIPObject struct {
-	ID         types.String `tfsdk:"id"`
-	Address    types.String `tfsdk:"address"`
-	Region     types.String `tfsdk:"region"`
-	Gateway    types.String `tfsdk:"gateway"`
-	SubnetMask types.String `tfsdk:"subnet_mask"`
-	Prefix     types.Int64  `tfsdk:"prefix"`
-	Type       types.String `tfsdk:"type"`
-	Public     types.Bool   `tfsdk:"public"`
-	RDNS       types.String `tfsdk:"rdns"`
-	LinodeID   types.Int64  `tfsdk:"linode_id"`
-	Reserved   types.Bool   `tfsdk:"reserved"`
-}
-
-var reservedIPObjectType = types.ObjectType{
-	AttrTypes: map[string]attr.Type{
-		"id":          types.StringType,
-		"address":     types.StringType,
-		"region":      types.StringType,
-		"gateway":     types.StringType,
-		"subnet_mask": types.StringType,
-		"prefix":      types.Int64Type,
-		"type":        types.StringType,
-		"public":      types.BoolType,
-		"rdns":        types.StringType,
-		"linode_id":   types.Int64Type,
-		"reserved":    types.BoolType,
-	},
-}
-
-var frameworkDataSourceFetchSchema = schema.Schema{
+var frameworkDataSourceSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"region": schema.StringAttribute{
 			Description: "The Region in which to reserve the IP address.",
@@ -44,8 +15,7 @@ var frameworkDataSourceFetchSchema = schema.Schema{
 		},
 		"address": schema.StringAttribute{
 			Description: "The reserved IP address.",
-			Computed:    true,
-			Optional:    true,
+			Required:    true,
 		},
 		"gateway": schema.StringAttribute{
 			Description: "The default gateway for this address.",
@@ -66,6 +36,14 @@ var frameworkDataSourceFetchSchema = schema.Schema{
 		"public": schema.BoolAttribute{
 			Description: "Whether this is a public or private IP address.",
 			Computed:    true,
+		},
+		"vpc_nat_1_1": schema.ListAttribute{
+			Description: "Contains information about the NAT 1:1 mapping of a public IP address to a VPC subnet.",
+			Computed:    true,
+			ElementType: instancenetworking.VPCNAT1To1Type,
+			Validators: []validator.List{
+				listvalidator.SizeAtMost(1),
+			},
 		},
 		"rdns": schema.StringAttribute{
 			Description: "The reverse DNS assigned to this address.",

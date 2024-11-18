@@ -228,6 +228,7 @@ func (p *FrameworkProvider) Resources(ctx context.Context) []func() resource.Res
 		placementgroupassignment.NewResource,
 		networkreservedip.NewResource,
 		instancereservedipassignment.NewResource,
+		networkreservedip.NewResource,
 		rdns.NewResource,
 		sshkey.NewResource,
 		stackscript.NewResource,
@@ -303,7 +304,7 @@ func (p *FrameworkProvider) DataSources(ctx context.Context) []func() datasource
 		placementgroups.NewDataSource,
 		childaccount.NewDataSource,
 		childaccounts.NewDataSource,
-		networkreservedip.NewDataSourceFetch,
-		networkreservedips.NewDataSourceList,
+		networkreservedip.NewDataSource,
+		networkreservedips.NewDataSource,
 	}
 }
