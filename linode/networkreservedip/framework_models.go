@@ -43,7 +43,6 @@ func (m *ReservedIPModel) FlattenReservedIP(
 	m.Type = helper.KeepOrUpdateString(m.Type, string(ip.Type), preserveKnown)
 	m.Public = helper.KeepOrUpdateBool(m.Public, ip.Public, preserveKnown)
 	m.RDNS = helper.KeepOrUpdateString(m.RDNS, ip.RDNS, preserveKnown)
-	m.LinodeID = helper.KeepOrUpdateInt64(m.LinodeID, int64(ip.LinodeID), preserveKnown)
 	m.Reserved = helper.KeepOrUpdateBool(m.Reserved, ip.Reserved, preserveKnown)
 	var resultList types.List
 	if ip.VPCNAT1To1 == nil {

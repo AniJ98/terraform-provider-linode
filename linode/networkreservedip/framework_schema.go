@@ -64,7 +64,7 @@ var frameworkResourceSchema = schema.Schema{
 		},
 		"linode_id": schema.Int64Attribute{
 			Description: "The ID of the Linode this address currently belongs to.",
-			Computed:    true,
+			Optional:    true,
 		},
 		"reserved": schema.BoolAttribute{
 			Description: "Whether this IP is reserved or not.",
