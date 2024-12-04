@@ -2929,26 +2929,44 @@ func TestAccResourceInstance_deleteWithReservedIP(t *testing.T) {
 	t.Parallel()
 	var instance linodego.Instance
 	resourceName := "linode_instance.foobar"
-	testRegion := "us-east"
 	instanceName := acctest.RandomWithPrefix("tf_test")
 	rootPass := acctest.RandString(16)
-	reservedIP := "172.104.17.36" // Use a test IP or fetch a real reserved IP
+	var ipAddress string
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acceptance.PreCheck(t) },
 		ProtoV5ProviderFactories: acceptance.ProtoV5ProviderFactories,
 		CheckDestroy:             acceptance.CheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: tmpl.WithReservedIP(t, instanceName, acceptance.PublicKeyMaterial, testRegion, rootPass, reservedIP),
+				Config: tmpl.WithReservedIP(t, instanceName, acceptance.PublicKeyMaterial, testRegion, rootPass),
 				Check: resource.ComposeTestCheckFunc(
 					acceptance.CheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "label", instanceName),
 					resource.TestCheckResourceAttr(resourceName, "ipv4.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ipv4.0", reservedIP),
+					func(s *terraform.State) error {
+						ipAddress = s.RootModule().Resources[resourceName].Primary.Attributes["ipv4.0"]
+						return nil
+					},
 				),
 			},
 			{
-				Config: " ", // Empty config to trigger instance deletion
+				Config: fmt.Sprintf(`
+					resource "linode_reserved_ip" "test" {
+						region = "%s"
+					}
+
+					resource "linode_instance" "foobar" {
+						label  = "%s"
+						type   = "g6-nanode-1"
+						region = "%s"
+						image  = "%s"
+						root_pass = "%s"
+						authorized_keys = ["%s"]
+
+						ipv4 = [linode_reserved_ip.test.address]
+					}
+				`, testRegion, instanceName, testRegion, acceptance.TestImageLatest, rootPass, acceptance.PublicKeyMaterial),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						client := acceptance.TestAccProvider.Meta().(*helper.ProviderMeta).Client
@@ -2960,17 +2978,23 @@ func TestAccResourceInstance_deleteWithReservedIP(t *testing.T) {
 						if apiErr, ok := err.(*linodego.Error); ok && apiErr.Code != 404 {
 							return fmt.Errorf("Error requesting Linode instance %d: %s", instance.ID, err)
 						}
-						// Check if the Reserved IP still exists and is reserved
-						ip, err := client.GetIPAddress(context.Background(), reservedIP)
+						// Check if the Reserved IP still exists and is reserved using the stored ipAddress variable
+						ip, err := client.GetIPAddress(context.Background(), ipAddress)
 						if err != nil {
 							return fmt.Errorf("Error checking if Reserved IP still exists: %s", err)
 						}
 						if !ip.Reserved {
-							return fmt.Errorf("Reserved IP %s is no longer reserved after instance deletion", reservedIP)
+							return fmt.Errorf("Reserved IP %s is no longer reserved after instance deletion", ipAddress)
 						}
 						return nil
 					},
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"root_pass", "authorized_keys", "image", "migration_type", "resize_disk", "firewall_id"},
 			},
 		},
 	})
