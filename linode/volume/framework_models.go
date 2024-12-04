@@ -45,7 +45,7 @@ func (data *VolumeDataSourceModel) ParseComputedAttributes(
 	data.FilesystemPath = types.StringValue(volume.FilesystemPath)
 	data.Created = types.StringValue(volume.Created.Format(time.RFC3339))
 	data.Updated = types.StringValue(volume.Updated.Format(time.RFC3339))
-	data.Encryption = types.StringValue(volume.Encryption)
+	// data.Encryption = types.StringValue(volume.Encryption)
 
 	return diags
 }
@@ -94,7 +94,7 @@ func (data *VolumeResourceModel) FlattenVolume(volume *linodego.Volume, preserve
 	data.Label = helper.KeepOrUpdateString(data.Label, volume.Label, preserveKnown)
 	data.Region = helper.KeepOrUpdateString(data.Region, volume.Region, preserveKnown)
 	data.Size = helper.KeepOrUpdateInt64(data.Size, int64(volume.Size), preserveKnown)
-	data.Encryption = helper.KeepOrUpdateString(data.Encryption, volume.Encryption, preserveKnown)
+	// data.Encryption = helper.KeepOrUpdateString(data.Encryption, volume.Encryption, preserveKnown)
 
 	// planned breaking change:
 	// 	data.LinodeID = helper.KeepOrUpdateIntPointer(data.LinodeID, volume.LinodeID, preserveKnown)

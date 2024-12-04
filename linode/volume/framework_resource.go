@@ -216,10 +216,10 @@ func (r *Resource) CreateVolume(
 	size := helper.FrameworkSafeInt64ToInt(data.Size.ValueInt64(), diags)
 
 	createOpts := linodego.VolumeCreateOptions{
-		Label:      data.Label.ValueString(),
-		Region:     data.Region.ValueString(),
-		Size:       size,
-		Encryption: data.Encryption.ValueString(),
+		Label:  data.Label.ValueString(),
+		Region: data.Region.ValueString(),
+		Size:   size,
+		// Encryption: data.Encryption.ValueString(),
 	}
 
 	diags.Append(data.Tags.ElementsAs(ctx, &createOpts.Tags, false)...)
